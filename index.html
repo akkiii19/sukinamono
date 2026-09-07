@@ -145,7 +145,31 @@
   .link-chip:hover{opacity:.8;}
 
   .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
-  .subfilters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+  .subfilters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  .toolrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+  .sort-select{
+    font-family:inherit;font-size:13px;color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+    background:var(--card);flex:0 0 auto;
+  }
+  .rating-filter{
+    position:relative;flex:0 0 auto;
+  }
+  .rating-filter-btn{
+    font-size:13px;padding:6px 14px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink-soft);
+  }
+  .rating-filter-btn.active{border-color:var(--accent);color:var(--accent);}
+  .rating-filter-list{
+    position:absolute;top:calc(100% + 4px);left:0;z-index:20;
+    background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;display:none;box-shadow:0 6px 16px rgba(0,0,0,.12);
+    white-space:nowrap;
+  }
+  .rating-filter-list.open{display:block;}
+  .rating-filter-list label{
+    display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 2px;cursor:pointer;color:var(--ink);
+  }
   .chip{
     font-size:13px;padding:6px 14px;border-radius:999px;
     border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink-soft);
@@ -171,8 +195,11 @@
   .item .title{font-size:16px;font-weight:500;}
   .stars{color:var(--gold);font-size:13px;letter-spacing:1px;}
   .item .memo{font-size:13px;color:var(--ink-soft);margin-top:4px;line-height:1.5;white-space:pre-wrap;}
-  .item .actions{flex:0 0 auto;display:flex;align-items:center;gap:8px;}
-  .actions-buttons{display:flex;flex-direction:column;gap:6px;}
+
+  /* actions: 上段(操作ボタン) + 下段(日付+削除) の2行構成 */
+  .item .actions{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .actions-top{display:flex;gap:6px;}
+  .actions-bottom{display:flex;align-items:center;gap:8px;}
   .date-label{font-size:13px;color:var(--ink-soft);white-space:nowrap;}
 
   .empty{
@@ -205,7 +232,9 @@
     .item{flex-wrap:wrap;}
     .item .cat-badges{order:2;flex-direction:row;}
     .item .body{order:1;flex-basis:100%;}
-    .item .actions{order:3;width:100%;justify-content:space-between;}
+    .item .actions{order:3;width:100%;align-items:stretch;}
+    .actions-top{justify-content:flex-end;}
+    .actions-bottom{justify-content:space-between;}
   }
 
   /* ---------- ログイン画面 ---------- */
@@ -320,9 +349,29 @@
 
     <div class="filters" id="filters">
       <span class="chip active" data-cat="すべて">すべて</span>
-      <input type="text" class="search" id="searchInput" placeholder="検索...">
     </div>
     <div class="subfilters" id="subfilters" style="display:none;"></div>
+    <div class="toolrow">
+      <select class="sort-select" id="sortSelect">
+        <option value="rating_desc">評価が高い順</option>
+        <option value="rating_asc">評価が低い順</option>
+        <option value="date_desc">登録日が新しい順</option>
+        <option value="date_asc">登録日が古い順</option>
+        <option value="name_asc">名前順</option>
+      </select>
+      <div class="rating-filter" id="ratingFilter">
+        <button type="button" class="rating-filter-btn" id="ratingFilterBtn">評価で絞り込み</button>
+        <div class="rating-filter-list" id="ratingFilterList">
+          <label><input type="checkbox" class="rf-check" value="0" checked>評価なし</label>
+          <label><input type="checkbox" class="rf-check" value="1" checked>★</label>
+          <label><input type="checkbox" class="rf-check" value="2" checked>★★</label>
+          <label><input type="checkbox" class="rf-check" value="3" checked>★★★</label>
+          <label><input type="checkbox" class="rf-check" value="4" checked>★★★★</label>
+          <label><input type="checkbox" class="rf-check" value="5" checked>★★★★★</label>
+        </div>
+      </div>
+      <input type="text" class="search" id="searchInput" placeholder="検索...">
+    </div>
 
     <div class="grid" id="grid"></div>
     <div class="empty" id="emptyState" style="display:none;">まだ何も登録されていません。上のフォームから追加してみましょう。</div>
@@ -338,6 +387,14 @@
           <div class="combo-list" id="curCatComboList"></div>
         </div>
         <input type="text" id="curNameInput" class="name-input" placeholder="名前">
+        <select id="curRatingInput">
+          <option value="0">関心度なし</option>
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3">★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5">★★★★★</option>
+        </select>
       </div>
       <div class="add-row">
         <textarea id="curMemoInput" placeholder="メモ(気になっている理由など)"></textarea>
@@ -354,6 +411,26 @@
 
     <div class="filters" id="curFilters">
       <span class="chip active" data-cat="すべて">すべて</span>
+    </div>
+    <div class="toolrow">
+      <select class="sort-select" id="curSortSelect">
+        <option value="rating_desc">関心度が高い順</option>
+        <option value="rating_asc">関心度が低い順</option>
+        <option value="date_desc">登録日が新しい順</option>
+        <option value="date_asc">登録日が古い順</option>
+        <option value="name_asc">名前順</option>
+      </select>
+      <div class="rating-filter" id="curRatingFilter">
+        <button type="button" class="rating-filter-btn" id="curRatingFilterBtn">関心度で絞り込み</button>
+        <div class="rating-filter-list" id="curRatingFilterList">
+          <label><input type="checkbox" class="crf-check" value="0" checked>関心度なし</label>
+          <label><input type="checkbox" class="crf-check" value="1" checked>★</label>
+          <label><input type="checkbox" class="crf-check" value="2" checked>★★</label>
+          <label><input type="checkbox" class="crf-check" value="3" checked>★★★</label>
+          <label><input type="checkbox" class="crf-check" value="4" checked>★★★★</label>
+          <label><input type="checkbox" class="crf-check" value="5" checked>★★★★★</label>
+        </div>
+      </div>
       <input type="text" class="search" id="curSearchInput" placeholder="検索...">
     </div>
 
@@ -511,6 +588,83 @@ function renderLinkChips(links){
   }</div>`;
 }
 
+/* ---------- 名前の並び替え: 記号 > 数字 > アルファベット > ひらがな・カタカナ > 漢字 ---------- */
+function charRank(ch){
+  const code = ch.codePointAt(0);
+  // 数字 0-9
+  if(ch >= '0' && ch <= '9') return 1;
+  // アルファベット A-Z a-z (大文字小文字は同ランクで比較時に区別)
+  if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) return 2;
+  // ひらがな・カタカナ
+  if((code >= 0x3040 && code <= 0x309F) || (code >= 0x30A0 && code <= 0x30FF)) return 3;
+  // 漢字(CJK統合漢字)
+  if(code >= 0x4E00 && code <= 0x9FFF) return 4;
+  // それ以外(記号・その他)は最優先
+  return 0;
+}
+function compareNames(a, b){
+  const sa = (a || '');
+  const sb = (b || '');
+  const len = Math.max(sa.length, sb.length);
+  for(let i = 0; i < len; i++){
+    const ca = sa[i], cb = sb[i];
+    if(ca === undefined) return -1;
+    if(cb === undefined) return 1;
+    const ra = charRank(ca), rb = charRank(cb);
+    if(ra !== rb) return ra - rb;
+    if(ca !== cb) return ca < cb ? -1 : 1;
+  }
+  return 0;
+}
+function sortItems(list, sortKey){
+  const arr = list.slice();
+  switch(sortKey){
+    case 'rating_desc':
+      arr.sort((a,b)=> (b.rating||0) - (a.rating||0) || (b.createdAt||0) - (a.createdAt||0));
+      break;
+    case 'rating_asc':
+      arr.sort((a,b)=> (a.rating||0) - (b.rating||0) || (b.createdAt||0) - (a.createdAt||0));
+      break;
+    case 'date_desc':
+      arr.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+      break;
+    case 'date_asc':
+      arr.sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+      break;
+    case 'name_asc':
+      arr.sort((a,b)=> compareNames(a.name, b.name));
+      break;
+    default:
+      arr.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+  }
+  return arr;
+}
+
+/* ---------- 評価フィルターのドロップダウン開閉共通処理 ---------- */
+function setupRatingFilter(btnId, listId, onChange){
+  const btn = document.getElementById(btnId);
+  const list = document.getElementById(listId);
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    list.classList.toggle('open');
+  });
+  document.addEventListener('click', (e)=>{
+    if(!btn.contains(e.target) && !list.contains(e.target)){ list.classList.remove('open'); }
+  });
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', onChange);
+  });
+}
+function getCheckedRatings(listId){
+  const list = document.getElementById(listId);
+  return Array.from(list.querySelectorAll('input[type=checkbox]:checked')).map(cb=>parseInt(cb.value));
+}
+function updateRatingFilterBtnState(btnId, listId){
+  const total = document.getElementById(listId).querySelectorAll('input[type=checkbox]').length;
+  const checked = getCheckedRatings(listId).length;
+  document.getElementById(btnId).classList.toggle('active', checked < total);
+}
+
 /* ---------- テーマ ---------- */
 async function loadTheme(){
   try{
@@ -630,6 +784,7 @@ let currentFilter = 'すべて';
 let currentSubFilter = 'すべて';
 let searchTerm = '';
 let editingId = null;
+let sortKey = 'rating_desc';
 
 const addLinkEditor = createLinkEditor('linkEditorAdd', 'linkAddBtnAdd');
 let editLinkEditors = {}; // id -> linkEditor instance for inline edit forms
@@ -717,6 +872,14 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   searchTerm = e.target.value.trim().toLowerCase();
   render();
 });
+document.getElementById('sortSelect').addEventListener('change', (e)=>{
+  sortKey = e.target.value;
+  render();
+});
+setupRatingFilter('ratingFilterBtn', 'ratingFilterList', ()=>{
+  updateRatingFilterBtnState('ratingFilterBtn', 'ratingFilterList');
+  render();
+});
 
 document.getElementById('addBtn').addEventListener('click', async ()=>{
   const catInput = document.getElementById('catInput');
@@ -753,6 +916,8 @@ function render(){
   const empty = document.getElementById('emptyState');
   grid.innerHTML = '';
 
+  const checkedRatings = getCheckedRatings('ratingFilterList');
+
   let filtered = items.filter(it=>{
     const matchCat = currentFilter === 'すべて' || it.category === currentFilter;
     const matchSub = currentSubFilter === 'すべて' || it.subCategory === currentSubFilter;
@@ -760,15 +925,18 @@ function render(){
       it.name.toLowerCase().includes(searchTerm) ||
       (it.memo && it.memo.toLowerCase().includes(searchTerm)) ||
       (it.subCategory && it.subCategory.toLowerCase().includes(searchTerm));
-    return matchCat && matchSub && matchSearch;
+    const matchRating = checkedRatings.includes(it.rating || 0);
+    return matchCat && matchSub && matchSearch && matchRating;
   });
+
+  filtered = sortItems(filtered, sortKey);
 
   document.getElementById('countLabel').textContent = items.length + '件';
 
   if(filtered.length === 0){ empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
-  filtered.slice().reverse().forEach(it=>{
+  filtered.forEach(it=>{
     const el = document.createElement('div');
     el.className = 'item';
 
@@ -798,9 +966,11 @@ function render(){
         ${renderLinkChips(it.links)}
       </div>
       <div class="actions">
-        ${dateStr ? `<span class="date-label">${dateStr}</span>` : ''}
-        <div class="actions-buttons">
+        <div class="actions-top">
           <button class="btn-ghost" data-id="${it.id}" data-action="edit">編集</button>
+        </div>
+        <div class="actions-bottom">
+          ${dateStr ? `<span class="date-label">${dateStr}</span>` : ''}
           <button class="btn-ghost" data-id="${it.id}" data-action="delete">削除</button>
         </div>
       </div>
@@ -886,6 +1056,7 @@ let curItems = [];
 let curFilter = 'すべて';
 let curSearchTerm = '';
 let curEditingId = null;
+let curSortKey = 'rating_desc';
 
 const curAddLinkEditor = createLinkEditor('linkEditorCurAdd', 'linkAddBtnCurAdd');
 let curEditLinkEditors = {};
@@ -935,10 +1106,19 @@ document.getElementById('curSearchInput').addEventListener('input', (e)=>{
   curSearchTerm = e.target.value.trim().toLowerCase();
   renderCur();
 });
+document.getElementById('curSortSelect').addEventListener('change', (e)=>{
+  curSortKey = e.target.value;
+  renderCur();
+});
+setupRatingFilter('curRatingFilterBtn', 'curRatingFilterList', ()=>{
+  updateRatingFilterBtnState('curRatingFilterBtn', 'curRatingFilterList');
+  renderCur();
+});
 
 document.getElementById('curAddBtn').addEventListener('click', async ()=>{
   const catInput = document.getElementById('curCatInput');
   const nameInput = document.getElementById('curNameInput');
+  const ratingInput = document.getElementById('curRatingInput');
   const memoInput = document.getElementById('curMemoInput');
 
   const category = catInput.value.trim();
@@ -951,13 +1131,14 @@ document.getElementById('curAddBtn').addEventListener('click', async ()=>{
   const newItem = {
     id: Date.now().toString(),
     category, name,
+    rating: parseInt(ratingInput.value),
     memo: memoInput.value.trim(),
     links: curAddLinkEditor.getLinks(),
     createdAt: Date.now()
   };
   curItems.push(newItem);
   await saveCurItems();
-  nameInput.value = ''; memoInput.value = '';
+  nameInput.value = ''; memoInput.value = ''; ratingInput.value = '0';
   curAddLinkEditor.reset();
   updateCurFilters();
   renderCur();
@@ -968,18 +1149,23 @@ function renderCur(){
   const empty = document.getElementById('curEmptyState');
   grid.innerHTML = '';
 
+  const checkedRatings = getCheckedRatings('curRatingFilterList');
+
   let filtered = curItems.filter(it=>{
     const matchCat = curFilter === 'すべて' || it.category === curFilter;
     const matchSearch = !curSearchTerm ||
       it.name.toLowerCase().includes(curSearchTerm) ||
       (it.memo && it.memo.toLowerCase().includes(curSearchTerm));
-    return matchCat && matchSearch;
+    const matchRating = checkedRatings.includes(it.rating || 0);
+    return matchCat && matchSearch && matchRating;
   });
+
+  filtered = sortItems(filtered, curSortKey);
 
   if(filtered.length === 0){ empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
-  filtered.slice().reverse().forEach(it=>{
+  filtered.forEach(it=>{
     const el = document.createElement('div');
     el.className = 'item';
 
@@ -992,6 +1178,7 @@ function renderCur(){
       return;
     }
 
+    const stars = it.rating > 0 ? '<span class="stars">' + '★'.repeat(it.rating) + '</span>' : '';
     const dateStr = it.createdAt ? formatDate(it.createdAt) : '';
     el.innerHTML = `
       <div class="cat-badges">
@@ -1000,15 +1187,18 @@ function renderCur(){
       <div class="body">
         <div class="top-row">
           <span class="title">${escapeHtml(it.name)}</span>
+          ${stars}
         </div>
         ${it.memo ? `<div class="memo">${escapeHtml(it.memo)}</div>` : ''}
         ${renderLinkChips(it.links)}
       </div>
       <div class="actions">
-        ${dateStr ? `<span class="date-label">${dateStr}</span>` : ''}
-        <div class="actions-buttons">
-          <button class="btn-promote" data-id="${it.id}" data-action="promote">スキナモノへ移動</button>
+        <div class="actions-top">
+          <button class="btn-promote" data-id="${it.id}" data-action="promote">スキナモノへ</button>
           <button class="btn-ghost" data-id="${it.id}" data-action="edit">編集</button>
+        </div>
+        <div class="actions-bottom">
+          ${dateStr ? `<span class="date-label">${dateStr}</span>` : ''}
           <button class="btn-ghost" data-id="${it.id}" data-action="delete">削除</button>
         </div>
       </div>
@@ -1018,11 +1208,15 @@ function renderCur(){
 }
 
 function renderCurEditForm(it){
+  const ratingOptions = [0,1,2,3,4,5].map(n=>
+    `<option value="${n}" ${it.rating===n?'selected':''}>${n===0?'関心度なし':'★'.repeat(n)}</option>`
+  ).join('');
   return `
     <div class="edit-form">
       <div class="edit-row">
         <input type="text" class="edit-cat" value="${escapeHtml(it.category)}" placeholder="カテゴリ">
         <input type="text" class="edit-name" value="${escapeHtml(it.name)}" placeholder="名前" style="flex:2;">
+        <select class="edit-rating">${ratingOptions}</select>
       </div>
       <div class="edit-row">
         <textarea class="edit-memo" placeholder="メモ">${escapeHtml(it.memo||'')}</textarea>
@@ -1063,12 +1257,13 @@ document.getElementById('curGrid').addEventListener('click', async (e)=>{
     const category = itemEl.querySelector('.edit-cat').value.trim();
     const name = itemEl.querySelector('.edit-name').value.trim();
     if(!category || !name) return;
+    const rating = parseInt(itemEl.querySelector('.edit-rating').value);
     const memo = itemEl.querySelector('.edit-memo').value.trim();
     const links = curEditLinkEditors[id] ? curEditLinkEditors[id].getLinks() : [];
 
     const idx = curItems.findIndex(it=>it.id === id);
     if(idx !== -1){
-      curItems[idx] = { ...curItems[idx], category, name, memo, links };
+      curItems[idx] = { ...curItems[idx], category, name, rating, memo, links };
       await saveCurItems();
     }
     curEditingId = null;
@@ -1079,6 +1274,7 @@ document.getElementById('curGrid').addEventListener('click', async (e)=>{
     const idx = curItems.findIndex(it=>it.id === id);
     if(idx === -1) return;
     const cur = curItems[idx];
+    // 関心度の星は引き継がず、評価なしで追加する
     const promoted = {
       id: Date.now().toString(),
       category: cur.category,
