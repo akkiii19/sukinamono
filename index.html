@@ -817,7 +817,6 @@ setupCombo('subCatInput','subCatArrow','subCatComboList', ()=>getSubCategories(d
 
 function updateFilters(){
   const filtersEl = document.getElementById('filters');
-  const searchInput = document.getElementById('searchInput');
   filtersEl.querySelectorAll('.chip:not([data-cat="すべて"])').forEach(c=>c.remove());
   getCategories().forEach(cat=>{
     const chip = document.createElement('span');
@@ -825,7 +824,7 @@ function updateFilters(){
     chip.dataset.cat = cat;
     chip.textContent = cat;
     if(cat === currentFilter) chip.classList.add('active');
-    filtersEl.insertBefore(chip, searchInput);
+    filtersEl.appendChild(chip);
   });
   updateSubFilters();
 }
@@ -1083,7 +1082,6 @@ setupCombo('curCatInput','curCatArrow','curCatComboList', ()=>getCurCategories()
 
 function updateCurFilters(){
   const filtersEl = document.getElementById('curFilters');
-  const searchInput = document.getElementById('curSearchInput');
   filtersEl.querySelectorAll('.chip:not([data-cat="すべて"])').forEach(c=>c.remove());
   getCurCategories().forEach(cat=>{
     const chip = document.createElement('span');
@@ -1091,7 +1089,7 @@ function updateCurFilters(){
     chip.dataset.cat = cat;
     chip.textContent = cat;
     if(cat === curFilter) chip.classList.add('active');
-    filtersEl.insertBefore(chip, searchInput);
+    filtersEl.appendChild(chip);
   });
 }
 document.getElementById('curFilters').addEventListener('click', (e)=>{
